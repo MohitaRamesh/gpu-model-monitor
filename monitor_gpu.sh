@@ -137,6 +137,13 @@ EOF
 ###############################################################################
 # update_process_tracking: Track GPU processes
 ###############################################################################
+
+# Helper function to validate PID
+is_valid_pid() {
+    local pid="$1"
+    [ -n "$pid" ] && [ "$pid" != "N/A" ] && [ "$pid" != "-" ] && [[ "$pid" =~ ^[0-9]+$ ]]
+}
+
 function update_process_tracking() {
     local current_time=$(date +%s)
     
@@ -147,7 +154,8 @@ function update_process_tracking() {
     # Get current processes using GPU from pmon (captures ALL processes, not just compute apps)
     # Format: gpu pid type sm mem enc dec command
     # We use -c 1 to get one sample, then parse it
-    local pmon_output=$(nvidia-smi pmon -c 1 2>/dev/null | grep -v "^#" | grep -v "gpu" | awk 'NF')
+    # Note: Using '^gpu[[:space:]]' to match header line only, not process names containing 'gpu'
+    local pmon_output=$(nvidia-smi pmon -c 1 2>/dev/null | grep -v "^#" | grep -v "^gpu[[:space:]]" | awk 'NF')
     
     if [ -z "$pmon_output" ]; then
         log_debug "No GPU processes currently running (pmon)"
@@ -175,16 +183,16 @@ function update_process_tracking() {
             gpu=$(echo "$content" | awk '{print $1}')
             pid=$(echo "$content" | awk '{print $4}')
             ptype=$(echo "$content" | awk '{print $5}')
-            # Process name is everything between field 6 and the last field
-            process_name=$(echo "$content" | awk '{for(i=6;i<=NF-1;i++) printf "%s ", $i}' | sed 's/[[:space:]]*$//')
+            # Process name: if NF > 6, join fields 6 to NF-1; if NF == 6, use field 6
+            process_name=$(echo "$content" | awk '{if (NF > 6) {for(i=6;i<=NF-1;i++) printf "%s ", $i; printf "\n"} else {print $6}}' | sed 's/[[:space:]]*$//')
             memory=$(echo "$content" | awk '{print $NF}' | sed 's/MiB//')
             
             # Clean up whitespace
             pid=$(echo "$pid" | tr -d ' ')
             memory=$(echo "$memory" | tr -d ' ')
             
-            # Validate PID format
-            if [ -z "$pid" ] || [ "$pid" = "N/A" ] || ! [[ "$pid" =~ ^[0-9]+$ ]]; then
+            # Validate PID format using helper function
+            if ! is_valid_pid "$pid"; then
                 continue
             fi
             
@@ -218,13 +226,13 @@ SQL
     # Process pmon output - use cached nvidia-smi outputs
     # Format: gpu pid type sm mem enc dec command
     echo "$pmon_output" | while read -r gpu_id pid ptype sm mem enc dec command rest; do
-        # Skip invalid lines
-        if [ -z "$pid" ] || [ "$pid" = "-" ] || ! [[ "$pid" =~ ^[0-9]+$ ]]; then
+        # Validate PID using helper function
+        if ! is_valid_pid "$pid"; then
             continue
         fi
         
-        # Check cached compute apps data first
-        local process_info=$(echo "$compute_apps" | grep "^[[:space:]]*$pid[[:space:]]*,")
+        # Check cached compute apps data first (support both with and without leading spaces)
+        local process_info=$(echo "$compute_apps" | grep -E "^[[:space:]]*${pid}[[:space:]]*,|^${pid}[[:space:]]*,")
         
         if [ -n "$process_info" ]; then
             # Parse compute app info
@@ -235,13 +243,13 @@ SQL
             # For non-compute processes, use command from pmon and get memory from cached smi_output
             local proc_pid="$pid"
             local proc_name="$command"
-            # Extract memory from cached nvidia-smi output
-            local smi_mem=$(echo "$smi_output" | grep -E "^\|.*[[:space:]]$pid[[:space:]].*MiB" | sed 's/.*[[:space:]]\([0-9]\+\)MiB.*/\1/')
+            # Extract memory from cached nvidia-smi output (more flexible PID matching)
+            local smi_mem=$(echo "$smi_output" | grep -E "^\|.*[[:space:]]${pid}[[:space:]].*MiB" | sed 's/.*[[:space:]]\([0-9]\+\)MiB.*/\1/')
             local proc_mem="${smi_mem:-0}"
         fi
         
-        # Skip if we couldn't determine the PID
-        if [ -z "$proc_pid" ] || [ "$proc_pid" = "N/A" ]; then
+        # Validate PID again after processing
+        if ! is_valid_pid "$proc_pid"; then
             continue
         fi
         
