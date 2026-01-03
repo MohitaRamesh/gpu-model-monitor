@@ -98,7 +98,7 @@ function initialize_database() {
     -- Table for tracking processes
     CREATE TABLE IF NOT EXISTS gpu_processes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        pid INTEGER NOT NULL,
+        pid INTEGER NOT NULL UNIQUE,
         process_name TEXT NOT NULL,
         first_seen INTEGER NOT NULL,
         last_seen INTEGER NOT NULL,
