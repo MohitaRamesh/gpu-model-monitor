@@ -140,6 +140,10 @@ EOF
 function update_process_tracking() {
     local current_time=$(date +%s)
     
+    # Cache nvidia-smi outputs to avoid repeated calls
+    local smi_output=$(nvidia-smi 2>/dev/null)
+    local compute_apps=$(nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv,noheader,nounits 2>/dev/null)
+    
     # Get current processes using GPU from pmon (captures ALL processes, not just compute apps)
     # Format: gpu pid type sm mem enc dec command
     # We use -c 1 to get one sample, then parse it
@@ -149,7 +153,6 @@ function update_process_tracking() {
         log_debug "No GPU processes currently running (pmon)"
         
         # Fallback: Try parsing standard nvidia-smi output for processes
-        local smi_output=$(nvidia-smi 2>/dev/null)
         if echo "$smi_output" | grep -q "No running processes found"; then
             log_debug "No GPU processes found (nvidia-smi)"
             return 0
@@ -180,8 +183,14 @@ function update_process_tracking() {
             pid=$(echo "$pid" | tr -d ' ')
             memory=$(echo "$memory" | tr -d ' ')
             
+            # Validate PID format
             if [ -z "$pid" ] || [ "$pid" = "N/A" ] || ! [[ "$pid" =~ ^[0-9]+$ ]]; then
                 continue
+            fi
+            
+            # Validate memory is numeric
+            if ! [[ "$memory" =~ ^[0-9]+$ ]]; then
+                memory="0"
             fi
             
             # Escape single quotes in process name
@@ -206,7 +215,7 @@ SQL
         return 0
     fi
     
-    # Process pmon output
+    # Process pmon output - use cached nvidia-smi outputs
     # Format: gpu pid type sm mem enc dec command
     echo "$pmon_output" | while read -r gpu_id pid ptype sm mem enc dec command rest; do
         # Skip invalid lines
@@ -214,8 +223,8 @@ SQL
             continue
         fi
         
-        # Get process name and memory from nvidia-smi query
-        local process_info=$(nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv,noheader,nounits 2>/dev/null | grep "^[[:space:]]*$pid[[:space:]]*,")
+        # Check cached compute apps data first
+        local process_info=$(echo "$compute_apps" | grep "^[[:space:]]*$pid[[:space:]]*,")
         
         if [ -n "$process_info" ]; then
             # Parse compute app info
@@ -223,17 +232,22 @@ SQL
             local proc_name=$(echo "$process_info" | cut -d',' -f2 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
             local proc_mem=$(echo "$process_info" | cut -d',' -f3 | tr -d ' ')
         else
-            # For non-compute processes, use command from pmon and estimate memory
+            # For non-compute processes, use command from pmon and get memory from cached smi_output
             local proc_pid="$pid"
             local proc_name="$command"
-            # Try to get memory from nvidia-smi standard output
-            local smi_mem=$(nvidia-smi 2>/dev/null | grep -E "^\|.*$pid.*MiB" | sed 's/.*[[:space:]]\([0-9]\+\)MiB.*/\1/')
+            # Extract memory from cached nvidia-smi output
+            local smi_mem=$(echo "$smi_output" | grep -E "^\|.*[[:space:]]$pid[[:space:]].*MiB" | sed 's/.*[[:space:]]\([0-9]\+\)MiB.*/\1/')
             local proc_mem="${smi_mem:-0}"
         fi
         
         # Skip if we couldn't determine the PID
         if [ -z "$proc_pid" ] || [ "$proc_pid" = "N/A" ]; then
             continue
+        fi
+        
+        # Validate memory is numeric
+        if ! [[ "$proc_mem" =~ ^[0-9]+$ ]]; then
+            proc_mem="0"
         fi
         
         # Escape single quotes in process name
