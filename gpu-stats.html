@@ -357,7 +357,7 @@
                     data: [],
                     tension: 0.4,
                     fill: false,
-                    yAxisID: 'y2'
+                    yAxisID: 'y1'
                 }]
             },
             options: {
@@ -372,6 +372,7 @@
                         type: 'linear',
                         position: 'left',
                         beginAtZero: true,
+                        max: 100,
                         grid: {
                             color: 'rgba(255, 255, 255, 0.1)'
                         },
@@ -396,23 +397,7 @@
                         },
                         title: {
                             display: true,
-                            text: 'Memory (MiB)',
-                            color: '#b2bac2'
-                        }
-                    },
-                    y2: {
-                        type: 'linear',
-                        position: 'right',
-                        beginAtZero: true,
-                        grid: {
-                            drawOnChartArea: false
-                        },
-                        ticks: {
-                            color: '#b2bac2'
-                        },
-                        title: {
-                            display: true,
-                            text: 'Power (W)',
+                            text: 'Memory (MiB) / Power (W)',
                             color: '#b2bac2'
                         }
                     },
