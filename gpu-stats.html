@@ -422,7 +422,7 @@
                             const meta = ci.getDatasetMeta(index);
 
                             // Toggle visibility
-                            meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
+                            meta.hidden = meta.hidden === null ? true : null;
                             ci.update();
                         }
                     },
