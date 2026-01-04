@@ -157,8 +157,9 @@ function update_process_tracking() {
     # Get current processes using GPU from pmon (captures ALL processes, not just compute apps)
     # Format: gpu pid type sm mem enc dec command
     # We use -c 1 to get one sample, then parse it
+    # pmon output has headers starting with '#', so we filter those out
     local pmon_raw=$(nvidia-smi pmon -c 1 2>/dev/null)
-    local pmon_output=$(echo "$pmon_raw" | grep -v "^#" | tail -n +2 | awk 'NF')
+    local pmon_output=$(echo "$pmon_raw" | grep -v "^#" | awk 'NF')
     
     log_debug "pmon raw output line count: $(echo "$pmon_raw" | wc -l)"
     log_debug "pmon filtered output: $pmon_output"
