@@ -40,6 +40,7 @@ A comprehensive Docker-based NVIDIA GPU monitoring solution with enhanced proces
 ```bash
 docker run -d \
   --name gpu-model-monitor \
+  --pid=host \
   -p 8081:8081 \
   -e TZ=America/Los_Angeles \
   -v ./history:/app/history:rw \
@@ -48,6 +49,8 @@ docker run -d \
   --restart unless-stopped \
   ghcr.io/loryanstrant/gpu-model-monitor:latest
 ```
+
+**Note:** The `--pid=host` flag is required for the container to see GPU processes running on the host and in other containers. Without this flag, only processes within the container itself will be visible.
 
 ### Using Docker Compose
 

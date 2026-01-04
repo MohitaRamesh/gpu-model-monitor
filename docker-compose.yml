@@ -4,6 +4,7 @@ services:
   gpu-model-monitor:
     build: .
     container_name: gpu-model-monitor
+    pid: "host"
     ports:
       - "8081:8081"
     environment:
