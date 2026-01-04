@@ -255,7 +255,7 @@ SQL
     
     # Process pmon output - use cached nvidia-smi outputs
     # Format: gpu pid type sm mem enc dec command
-    while read -r gpu_id pid ptype sm mem enc dec command rest; do
+    while read -r gpu_id pid ptype sm mem_util enc dec command rest; do
         # Skip empty lines
         [ -z "$pid" ] && continue
         
