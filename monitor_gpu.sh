@@ -221,7 +221,7 @@ function update_process_tracking() {
             process_name=$(echo "$process_name" | sed "s/'/''/g")
             
             # Insert snapshot and update tracking
-            local sql_result=$(sqlite3 "$DB_FILE" 2>&1 <<SQL
+            if sql_result=$(sqlite3 "$DB_FILE" 2>&1 <<SQL
 INSERT INTO process_snapshots (timestamp_epoch, pid, process_name, memory_usage)
 VALUES ($current_time, $pid, '$process_name', $memory);
 
@@ -233,9 +233,7 @@ ON CONFLICT(pid) DO UPDATE SET
     avg_memory = ((avg_memory * sample_count) + $memory) / (sample_count + 1),
     sample_count = sample_count + 1;
 SQL
-)
-            
-            if [ $? -eq 0 ]; then
+); then
                 process_count=$((process_count + 1))
                 log_debug "Successfully inserted/updated process PID=$pid"
             else
@@ -298,7 +296,7 @@ SQL
         proc_name=$(echo "$proc_name" | sed "s/'/''/g")
         
         # Insert snapshot and update tracking
-        local sql_result=$(sqlite3 "$DB_FILE" 2>&1 <<SQL
+        if sql_result=$(sqlite3 "$DB_FILE" 2>&1 <<SQL
 INSERT INTO process_snapshots (timestamp_epoch, pid, process_name, memory_usage)
 VALUES ($current_time, $proc_pid, '$proc_name', $proc_mem);
 
@@ -310,9 +308,7 @@ ON CONFLICT(pid) DO UPDATE SET
     avg_memory = ((avg_memory * sample_count) + $proc_mem) / (sample_count + 1),
     sample_count = sample_count + 1;
 SQL
-)
-        
-        if [ $? -eq 0 ]; then
+); then
             process_count=$((process_count + 1))
             log_debug "Successfully inserted/updated process PID=$proc_pid"
         else
@@ -334,7 +330,7 @@ function get_current_processes() {
     
     log_debug "Getting current processes with cutoff_time=$cutoff_time"
     
-    local result=$(sqlite3 -json "$DB_FILE" 2>&1 <<SQL
+    if result=$(sqlite3 -json "$DB_FILE" 2>&1 <<SQL
     SELECT 
         p.pid,
         p.process_name,
@@ -358,16 +354,14 @@ function get_current_processes() {
     WHERE p.last_seen > $cutoff_time
     ORDER BY p.last_seen DESC;
 SQL
-)
-    
-    if [ $? -ne 0 ]; then
+); then
+        log_debug "Current processes query returned: ${result:0:200}..."
+        echo "$result"
+    else
         log_error "Failed to query current processes: $result"
         echo "[]"
         return 1
     fi
-    
-    log_debug "Current processes query returned: ${result:0:200}..."
-    echo "$result"
 }
 
 ###############################################################################
@@ -377,7 +371,7 @@ function get_process_history() {
     log_debug "Getting process history"
     
     # Get all processes with their history
-    local result=$(sqlite3 -json "$DB_FILE" 2>&1 <<SQL
+    if result=$(sqlite3 -json "$DB_FILE" 2>&1 <<SQL
     SELECT 
         pid,
         process_name,
@@ -391,16 +385,14 @@ function get_process_history() {
     ORDER BY last_seen DESC
     LIMIT 100;
 SQL
-)
-    
-    if [ $? -ne 0 ]; then
+); then
+        log_debug "Process history query returned: ${result:0:200}..."
+        echo "$result"
+    else
         log_error "Failed to query process history: $result"
         echo "[]"
         return 1
     fi
-    
-    log_debug "Process history query returned: ${result:0:200}..."
-    echo "$result"
 }
 
 ###############################################################################
